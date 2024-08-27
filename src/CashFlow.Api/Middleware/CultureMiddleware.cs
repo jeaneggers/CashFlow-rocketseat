@@ -1,4 +1,6 @@
-﻿namespace CashFlow.Api.Middleware;
+﻿using System.Globalization;
+
+namespace CashFlow.Api.Middleware;
 
 public class CultureMiddleware
 {
@@ -11,19 +13,22 @@ public class CultureMiddleware
         _next = next;
     }
 
-    public async Task Invoke(HttpContext context
+    public async Task Invoke(HttpContext context)
 	{
-       var culture = context.Request.Headers.AcceptLanguage.FirstOrDefault();
+        var supportedLanguages = CultureInfo.GetCultures(CultureTypes.AllCultures).ToList();
+
+        var requestedCulture = context.Request.Headers.AcceptLanguage.FirstOrDefault();
 
         var cultureInfo = new CultureInfo("pt-BR");
 
-        if (string.IsNullOrWhiteSpace(culture) == false) 
+        if (string.IsNullOrWhiteSpace(requestedCulture) == false
+            && supportedLanguages.Exists(language => language.Name.Equals(requestedCulture))) 
         {
-            cultureInfo = new CultureInfo(culture);
+            cultureInfo = new CultureInfo(requestedCulture);
         }
 
-        cultureInfo.CurrentCulture = cultureInfo;
-        cultureInfo.CurrentUICulture = cultureInfo;
+        CultureInfo.CurrentCulture = cultureInfo;
+        CultureInfo.CurrentUICulture = cultureInfo;
 
         await _next(context);
     }
